@@ -17,31 +17,36 @@ class OrderService {
         }
         //10 * 60 * 10000 >> Se ejecuta a los 10 minutos
         //5 * 60 * 5000 > se ejecuta a los 5
-        timer.scheduleAtFixedRate(task, 8000, 10 * 60 * 10000)
-        //timer.scheduleAtFixedRate(task, 8000, 3 * 60 * 1000)
+        // timer.scheduleAtFixedRate(task, 8000, 10 * 60 * 10000)
+        timer.scheduleAtFixedRate(task, 8000, 3 * 60 * 1000)
     }
 
     def getOrdersfromHandy() {
-        Dotenv dotenv = Dotenv.load()
-        def url = "https://hub.handy.la/api/v2/salesOrder"
-        HttpURLConnection connection = url.toURL().openConnection()
-        connection.setRequestMethod("GET")
-        connection.setRequestProperty("Authorization", "Bearer ${dotenv.get("API_HANDY_TOKEN")}")
-        println(connection.responseCode)
-        JsonSlurper json = new JsonSlurper()
-        if (connection.responseCode == 200) {
-            def data = json.parseText(connection.content.text)
-            if (data.salesOrders.size()) {
-                println(saveOrders(data.salesOrders))
-                syncronizedOrders(data.salesOrders.collect {
-                    it.id
-                })
+        try {
+            Dotenv dotenv = Dotenv.load()
+            def url = "https://hub.handy.la/api/v2/salesOrder"
+            HttpURLConnection connection = url.toURL().openConnection()
+            connection.setRequestMethod("GET")
+            connection.setRequestProperty("Authorization", "Bearer ${dotenv.get("API_HANDY_TOKEN")}")
+            println(connection.responseCode)
+            JsonSlurper json = new JsonSlurper()
+            if (connection.responseCode == 200) {
+                def data = json.parseText(connection.content.text)
+                if (data.salesOrders.size() > 0) {
+                    println(saveOrders(data.salesOrders))
+                    syncronizedOrders(data.salesOrders.collect {
+                        it.id
+                    })
+                } else {
+                    println("No se encontró ningún pedido en Handy")
+                }
             } else {
-                println("No se encontró ningún pedido en Handy")
+                println("Hubo un error al conectarse al api. Por favor valide su token de autorizacion")
             }
-        } else {
-            println("Hubo un error al conectarse al api. Por favor valide su token de autorizacion")
+        } catch (Exception ex) {
+            println("Error al consumir el servicio de Handy, sin respuesta")
         }
+
     }
 
     //Metodo que guarda los pedidos que vienen de HANDY
