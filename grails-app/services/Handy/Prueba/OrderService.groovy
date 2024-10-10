@@ -17,7 +17,7 @@ class OrderService {
         }
         //10 * 60 * 10000 >> Se ejecuta a los 10 minutos
         //5 * 60 * 5000 > se ejecuta a los 5
-        timer.scheduleAtFixedRate(task, 5000, 10 * 60 * 10000)
+        timer.scheduleAtFixedRate(task, 8000, 10 * 60 * 10000)
     }
 
     def getOrdersfromHandy() {
@@ -63,8 +63,9 @@ class OrderService {
                 log.save(flush:true)
             }
         }
-        //response.put(message)
+        response.put(message)
         println(message)
+        return response
     }
 
     @Transactional
