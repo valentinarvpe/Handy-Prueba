@@ -15,6 +15,7 @@ class Orders {
     static constraints = {
     }
     static mapping = {
+        id generator: 'assigned'
         version false
     }
 }

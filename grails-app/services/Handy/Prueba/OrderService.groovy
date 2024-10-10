@@ -17,7 +17,8 @@ class OrderService {
         }
         //10 * 60 * 10000 >> Se ejecuta a los 10 minutos
         //5 * 60 * 5000 > se ejecuta a los 5
-        timer.scheduleAtFixedRate(task, 8000, 10 * 60 * 10000)
+        //timer.scheduleAtFixedRate(task, 8000, 10 * 60 * 10000)
+        timer.scheduleAtFixedRate(task, 8000, 3 * 60 * 1000)
     }
 
     def getOrdersfromHandy() {
@@ -33,11 +34,12 @@ class OrderService {
             //def orders = data.salesOrders ? []
             saveOrders(data.salesOrders)
             syncronizedOrders(data.salesOrders.collect {
-                it.id.toString()
+                it.id
             })
         }
     }
 
+    //Metodo que guarda los pedidos que vienen de HANDY
     @Transactional
     def saveOrders(List data) {
         def message = []
@@ -63,21 +65,22 @@ class OrderService {
                 log.save(flush:true)
             }
         }
-        response.put(message)
+        response.put("response",message)
         println(message)
         return response
     }
 
+    //Metodo que elimina pedidos en local cuando no se encuentra en HANDY
     @Transactional
     def syncronizedOrders(List<String> dataHandy) {
         println(dataHandy)
         def orderList = Orders.findAll()
         def idsLocalOrders =  orderList.collect {
-            it.id.toString()
+            it.id
         }
          idsLocalOrders.each {idOrderLocal -> {
             if(!dataHandy.contains(idOrderLocal)){
-                Order orderToDelete = Order.findById(idOrderLocal)
+                Orders orderToDelete = Orders.findById(idOrderLocal)
                 if(orderToDelete){
                     orderToDelete.delete(flush:true)
                     println("Pedido ${idOrderLocal} eliminado correctamente")
