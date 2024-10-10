@@ -5,12 +5,13 @@ import spock.lang.Specification
 
 class OrdersSpec extends Specification implements DomainUnitTest<Orders> {
 
-     void "test domain constraints"() {
+    //TEST PARA VALIDAR EL GUARDADO
+    void "test save order"() {
         when:
-        Orders domain = new Orders()
-        //TODO: Set domain props here
-
+        def order = new Orders(11, "PRUEBAS DE GUARDADO", BigDecimal.ONE)
         then:
-        domain.validate()
-     }
+        order.validate()
+        and:
+        order.descripcion == "PRUEBAS DE GUARDADO"
+    }
 }

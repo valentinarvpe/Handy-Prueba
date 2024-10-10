@@ -36,6 +36,8 @@ class OrderService {
             syncronizedOrders(data.salesOrders.collect {
                 it.id
             })
+        } else {
+            println("Hubo un error al conectarse al api. Por favor valide su token de autorizacion")
         }
     }
 

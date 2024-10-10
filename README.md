@@ -39,3 +39,7 @@ Para iniciar el proyecto ejecuta
 ````
 gradle run
 ````
+Tener en cuenta que esta aplicación usa como variable de entorno el token que consume el servicio de traer los pedidos desde Handy.
+- Cree su archivo .env 
+- Cree la variable API_HANDY_TOKEN
+- Agregue su token
