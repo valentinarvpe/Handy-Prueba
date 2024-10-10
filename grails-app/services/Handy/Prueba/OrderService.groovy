@@ -31,11 +31,14 @@ class OrderService {
         JsonSlurper json = new JsonSlurper()
         if (connection.responseCode == 200) {
             def data = json.parseText(connection.content.text)
-            //def orders = data.salesOrders ? []
-            saveOrders(data.salesOrders)
-            syncronizedOrders(data.salesOrders.collect {
-                it.id
-            })
+            if (data.salesOrders.size()) {
+                println(saveOrders(data.salesOrders))
+                syncronizedOrders(data.salesOrders.collect {
+                    it.id
+                })
+            } else {
+                println("No se encontró ningún pedido en Handy")
+            }
         } else {
             println("Hubo un error al conectarse al api. Por favor valide su token de autorizacion")
         }
@@ -48,49 +51,53 @@ class OrderService {
         Map response = new HashMap()
         data.each { item ->
             {
-                JsonSlurper slurper = new JsonSlurper()
-                print(item.getAt("sellerComment"))
-                print(item.getAt("totalSales"))
                 int id = item.getAt("id")?.toInteger()
                 BigDecimal total = item.getAt("totalSales")?.toBigDecimal()
-                def description = item.getAt("sellerComment") == null ? "Pruebas" : item.getAt("sellerComment")
-                Orders order = new Orders(id, description, total )
-                try {
-                    order.save(flush:true, failOnError: true)
+                def description = item.getAt("sellerComment") == null ? "Sin descripción" : item.getAt("sellerComment")
+                Orders order = new Orders(id, description, total)
+                if (order.validate()) {
+                    try {
+                        order.save(flush: true, failOnError: true)
+                        message.add("Pedido #${order.id} guardado correctamente en nuestra BD")
+                    } catch (Exception ex) {
+                        ex.printStackTrace()
+                        message.add("Error al guardar pedido")
+                    }
+                } else {
                     println(order.errors)
-                    message.add("Pedido #${order.id} guardado correctamente en nuestra BD")
-                } catch (Exception ex) {
-                    ex.printStackTrace()
-                    message.add("Error al guardar pedido")
                 }
-                Logs log = new Logs( "Transacción de guardado")
-                log.save(flush:true)
+                Logs log = new Logs("Transacción de guardado")
+                log.save(flush: true)
             }
         }
-        response.put("response",message)
-        println(message)
+        response.put("response", message)
         return response
     }
 
     //Metodo que elimina pedidos en local cuando no se encuentra en HANDY
     @Transactional
     def syncronizedOrders(List<String> dataHandy) {
-        println(dataHandy)
         def orderList = Orders.findAll()
-        def idsLocalOrders =  orderList.collect {
+        def idsLocalOrders = orderList.collect {
             it.id
         }
-         idsLocalOrders.each {idOrderLocal -> {
-            if(!dataHandy.contains(idOrderLocal)){
-                Orders orderToDelete = Orders.findById(idOrderLocal)
-                if(orderToDelete){
-                    orderToDelete.delete(flush:true)
-                    println("Pedido ${idOrderLocal} eliminado correctamente")
-                    Logs log = new Logs( "Transacción de elimindo")
-                    log.save(flush:true)
+        idsLocalOrders.each { idOrderLocal ->
+            {
+                if (!dataHandy.contains(idOrderLocal)) {
+                    try {
+                        Orders orderToDelete = Orders.findById(idOrderLocal)
+                        if (orderToDelete) {
+                            orderToDelete.delete(flush: true)
+                            println("Pedido ${idOrderLocal} eliminado correctamente")
+                            Logs log = new Logs("Transacción de elimindo")
+                            log.save(flush: true)
+                        }
+                    } catch (Exception ex) {
+                        println("No se pudo eliminar el pedido ${ex.getMessage()}")
+                    }
                 }
             }
-        }}
+        }
 
     }
 }
