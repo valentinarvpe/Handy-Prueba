@@ -3,7 +3,6 @@ package Handy.Prueba
 import grails.gorm.transactions.Transactional
 import groovy.json.JsonSlurper
 import io.github.cdimascio.dotenv.Dotenv
-import org.springframework.beans.factory.annotation.Value
 
 class OrderService {
 
@@ -16,7 +15,9 @@ class OrderService {
                 getOrdersfromHandy()
             }
         }
-        timer.scheduleAtFixedRate(task, 5000, 3 * 60 * 1000)
+        //10 * 60 * 10000 >> Se ejecuta a los 10 minutos
+        //5 * 60 * 5000 > se ejecuta a los 5
+        timer.scheduleAtFixedRate(task, 5000, 10 * 60 * 10000)
     }
 
     def getOrdersfromHandy() {
@@ -29,15 +30,11 @@ class OrderService {
         JsonSlurper json = new JsonSlurper()
         if (connection.responseCode == 200) {
             def data = json.parseText(connection.content.text)
-            def orders = data.salesOrders ? []
-            //println(json.parseText(connection.content.text))
-            //println(data.salesOrders)
+            //def orders = data.salesOrders ? []
             saveOrders(data.salesOrders)
             syncronizedOrders(data.salesOrders.collect {
-                it.id
+                it.id.toString()
             })
-
-
         }
     }
 
@@ -48,18 +45,21 @@ class OrderService {
         data.each { item ->
             {
                 JsonSlurper slurper = new JsonSlurper()
-                print(item.getAt("id"))
                 print(item.getAt("sellerComment"))
                 print(item.getAt("totalSales"))
+                int id = item.getAt("id")?.toInteger()
+                BigDecimal total = item.getAt("totalSales")?.toBigDecimal()
+                def description = item.getAt("sellerComment") == null ? "Pruebas" : item.getAt("sellerComment")
+                Orders order = new Orders(id, description, total )
                 try {
-                    Orders order = new Orders(item.getAt("id"), item.getAt("sellerComment"), item.getAt("totalSales"))
-                    order.save(flush: true)
+                    order.save(flush:true, failOnError: true)
+                    println(order.errors)
                     message.add("Pedido #${order.id} guardado correctamente en nuestra BD")
                 } catch (Exception ex) {
                     ex.printStackTrace()
                     message.add("Error al guardar pedido")
                 }
-                Logs log = new Logs(1, "Transacción de guardado")
+                Logs log = new Logs( "Transacción de guardado")
                 log.save(flush:true)
             }
         }
@@ -72,14 +72,16 @@ class OrderService {
         println(dataHandy)
         def orderList = Orders.findAll()
         def idsLocalOrders =  orderList.collect {
-            it.id
+            it.id.toString()
         }
-        idsLocalOrders.each {idOrderLocal -> {
+         idsLocalOrders.each {idOrderLocal -> {
             if(!dataHandy.contains(idOrderLocal)){
                 Order orderToDelete = Order.findById(idOrderLocal)
                 if(orderToDelete){
                     orderToDelete.delete(flush:true)
                     println("Pedido ${idOrderLocal} eliminado correctamente")
+                    Logs log = new Logs( "Transacción de elimindo")
+                    log.save(flush:true)
                 }
             }
         }}

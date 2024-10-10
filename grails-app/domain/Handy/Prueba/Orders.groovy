@@ -6,7 +6,7 @@ class Orders {
     String descripcion
     BigDecimal total
 
-    Orders(Integer id, String descripcion, BigDecimal total) {
+    Orders(int id, String descripcion, BigDecimal total) {
         this.id = id
         this.descripcion = descripcion
         this.total = total

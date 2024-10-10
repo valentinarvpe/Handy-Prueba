@@ -8,7 +8,7 @@ class Logs {
         this.description = description
     }
     static mapping = {
-        id generator: 'uuid'
+        id generator: 'increment'
         version false
     }
     static constraints = {
