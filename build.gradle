@@ -11,8 +11,11 @@ plugins {
 group = "Handy.Prueba"
 
 repositories {
+    mavenLocal()
     mavenCentral()
     maven { url "https://repo.grails.org/grails/core/" }
+    maven { url "https://repo.grails.org/ui/native/plugins/" }
+    gradlePluginPortal()
 }
 
 configurations {
@@ -41,6 +44,10 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-validation")
     implementation('io.github.cdimascio:java-dotenv:5.2.2')
     compileOnly("io.micronaut:micronaut-inject-groovy")
+    implementation 'org.codehaus.gpars:gpars:1.2.1'
+    implementation 'org.slf4j:slf4j-api:1.7.30'
+    implementation 'org.slf4j:slf4j-simple:1.7.30'
+    implementation 'io.micronaut:micronaut-http-client'
     console("org.grails:grails-console")
     runtimeOnly("com.h2database:h2")
     runtimeOnly("org.apache.tomcat:tomcat-jdbc")

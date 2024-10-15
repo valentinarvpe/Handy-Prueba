@@ -12,8 +12,14 @@
         </encoder>
     </appender>
 
-    <root level="error">
+    <!-- Configuración del nivel raíz (root) -->
+    <root level="INFO">
         <appender-ref ref="STDOUT" />
     </root>
+
+    <!-- Logger específico para tu paquete Handy.Prueba -->
+    <logger name="grails.app.services.Handy.Prueba" level="INFO" additivity="false">
+        <appender-ref ref="STDOUT" />
+    </logger>
 
 </configuration>
